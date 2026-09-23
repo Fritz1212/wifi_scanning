@@ -130,3 +130,4 @@ Yin, G.-L., Zhang, J., Shen, G., & Chen, Y. (2022). FewSense, Towards a Scalable
 
 Zhang, X., Yan, H., Huang, J., Liu, B., Feng, Y.-H., Liu, J., Li, M., Zhang, F., & Liu, Z. (2026). Beyond Physical Labels: Redefining Domains for Robust WiFi-based Gesture Recognition. *Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies, 10*, 1 - 27. https://doi.org/10.1145/3790114
 
+AirFi: Empowering WiFi-based Passive Human Gesture Recognition to Unseen Environment via Domain Generalization. https://arxiv.org/abs/2209.10285
