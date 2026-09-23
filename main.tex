@@ -1,0 +1,539 @@
+% =====================================================================
+%  CROSS-DOMAIN WI-FI CSI PERCEPTION VIA SELF-SUPERVISED DISENTANGLEMENT
+%  AND SPATIAL RETRIEVAL-AUGMENTED GENERATION
+%
+%  Target: IEEE conference paper (IEEEtran, two-column, 6-8 pages incl. refs)
+%
+%  ---------------------------------------------------------------------
+%  !!  READ BEFORE SUBMITTING  !!
+%  This draft contains NO measured numbers. Every place where a result
+%  belongs is marked with a red [RESULT NEEDED: ...] placeholder, and
+%  every experimental design choice is marked [DECISION]. Nothing in this
+%  file was invented: the numbers must be filled from real runs, and the
+%  citations were fetched programmatically into references_verified.bib.
+%  Set \draftnoticefalse at the end to remove the draft banner.
+%  ---------------------------------------------------------------------
+% =====================================================================
+
+\documentclass[conference]{IEEEtran}
+
+% ---- packages (kept minimal to avoid IEEEtran conflicts) -------------
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% \usepackage{subcaption}  % removed: unused, and not available in the CTAN tlnet archive
+% \usepackage{balance}  % removed: not available in the CTAN tlnet archive
+
+% ---- draft guard -----------------------------------------------------
+\newif\ifdraftnotice
+\draftnoticetrue
+
+% ---- method name + placeholder macros --------------------------------
+\newcommand{\method}{\textsc{Relay}}
+\newcommand{\RESULTNEEDED}[1]{\textcolor{red}{\textbf{[RESULT NEEDED: #1]}}}
+\newcommand{\DECISION}[1]{\textcolor{blue}{\textbf{[DECISION: #1]}}}
+\newcommand{\TODO}[1]{\textcolor{orange}{\textbf{[TODO: #1]}}}
+
+% ---- math shorthands -------------------------------------------------
+\newcommand{\zc}{\mathbf{z}^{c}}      % content (gesture/activity) factor
+\newcommand{\zd}{\mathbf{z}^{d}}      % domain (environment/layout) factor
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+
+\begin{document}
+
+\title{Cross-Domain Wi-Fi CSI Perception via Self-Supervised\\
+Disentanglement and Spatial Retrieval-Augmented Generation}
+
+\author{\IEEEauthorblockN{Author Name(s) --- \TODO{fill in for camera-ready}}
+\IEEEauthorblockA{Department, Institution\\
+City, Country\\
+\texttt{email@example.org}}}
+
+\maketitle
+
+\ifdraftnotice
+\begin{center}
+\fbox{\parbox{0.94\columnwidth}{\small\textbf{\textcolor{red}{DRAFT --- RESULTS NOT YET MEASURED.}}
+This manuscript states the method, the evaluation protocol, and the positioning against
+prior work. It reports \emph{no} empirical numbers, because no experiments have been run
+yet. All result slots are marked \RESULTNEEDED{...}. See \texttt{HANDOFF.md} for the
+runnable experiment plan.}}
+\end{center}
+\vspace{-0.4em}
+\fi
+
+% =====================================================================
+\begin{abstract}
+% 5-sentence formula (Farquhar): achieved / why hard / how / evidence / headline number.
+We introduce \method{}, a cross-domain Wi-Fi channel state information (CSI) sensing
+framework that couples \emph{self-supervised disentanglement} of gesture content from
+environmental conditions with a \emph{spatial retrieval-augmented} memory that supplies
+the model with an explicit, updatable description of the space it currently occupies.
+Existing CSI sensing systems are trained and deployed in the same room: because the
+received signal is a function of both the human-induced dynamics and the static
+propagation environment, accuracy collapses when the layout, transmitter placement, or
+furniture configuration changes, and current remedies either require labelled target data,
+a retraining round, or multiple transceivers.
+Our key idea is to treat the environment not as nuisance to be erased but as
+\emph{retrievable context}: a self-supervised objective separates a content code from a
+domain code, and at inference a geometry-tagged memory indexed by coarse spatial
+descriptors conditions the classifier on the active layout, so a new room becomes a
+retrieval problem rather than a retraining problem.
+We evaluate on \DECISION{dataset(s) to be finalised --- candidates: Widar3.0, SignFi, Wiar,
+CSIDA, XRF55} under cross-environment, cross-location, and cross-orientation protocols,
+against domain-adaptation and domain-generalisation baselines.
+\RESULTNEEDED{abstract headline: best cross-domain accuracy/F1 with mean\,$\pm$\,std over
+$N$ seeds, and the absolute gain over the strongest baseline}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Wi-Fi sensing, channel state information, cross-domain generalisation, self-supervised
+learning, disentangled representation, retrieval-augmented generation.
+\end{IEEEkeywords}
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Wi-Fi sensing infers human activity from the channel state information (CSI) that
+commodity network interface cards already expose, and it is attractive precisely because
+it needs no new hardware, works through walls, and observes no images
+\cite{Chen2022Survey,Radwan2025Survey}. Its central weakness is equally well documented:
+a CSI sample mixes what the person is doing with where the measurement is taken. The same
+gesture performed in a different room, at a different distance from the transmitter, or
+after a door is opened produces a CSI trajectory that a classifier trained in the original
+setting misreads. Reported cross-domain drops are severe --- the survey of Chen
+et al.\ \cite{Chen2022Survey} and the more recent taxonomy of Wang et al.
+\cite{Wang2025GeneralizabilitySurvey} both organise an entire literature around the
+problem of maintaining accuracy when "the deployment domain is not the training domain",
+and Zhang et al.\ \cite{Zhang2026BeyondLabels} argue the very definition of a domain
+under-specifies the factors that matter.
+
+Prior work attacks this along a well-charted axis. \emph{Domain adaptation} aligns source
+and target feature distributions from unlabelled target data \cite{Yang2021BookChapter,
+Chen2022Fidora,Mao2024WiCro,Prasad2024DANN}, \emph{domain generalisation} instead seeks
+invariance from source data alone \cite{Liu2024WiSR,Liu2024WiSGP,Wang2022AirFi,
+Xu2023ARCFi}, \emph{few-shot} methods match a handful of target samples against learned
+prototypes \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS}, and \emph{self-supervised}
+pretraining turns cheap unlabelled CSI into a transferable encoder
+\cite{Yang2022AutoFi,Barahimi2024CPC,Lyons2024WiFiAct,Radwan2025Survey}. Two observations
+motivate this paper.
+
+First, invariance is a lossy target. When a model is trained to be blind to the
+environment, it discards information that is genuinely useful for deciding whether a
+reading is plausible --- a fall signature in a narrow corridor and in an open hall are not
+the same measurement, and a system that cannot tell the two apart has no way to notice
+that it is being asked about a space it has never modelled. Disentanglement decomposes
+this problem rather than deleting it \cite{Kang2021ContextAware}, but the domain factor is
+then usually thrown away, used only adversarially.
+
+Second, the field already names the missing ingredient. The generalisability survey of
+Wang et al.\ \cite{Wang2025GeneralizabilitySurvey} explicitly asks whether
+retrieval-augmented generation (RAG) can act as "an external database" that "allows the
+model to access Wi-Fi knowledge on demand". In the language-model literature that idea is
+mature \cite{lewis2020rag}, and it has begun to reach wireless systems
+\cite{Nazar2024Enwar,Nazar2026Enwar2,wi_chat} and spatially-constrained reasoning
+\cite{spatial_rag}. To our knowledge no work uses retrieval over \emph{spatial/layout}
+descriptions as the adaptation mechanism for cross-domain CSI \emph{sensing}: retrieval has
+been applied to network management and to interpreting CSI with language models, not to
+supplying the sensing head with the layout of the room it is currently in.
+
+We therefore propose \method{}, which (i) learns a self-supervised factorisation of CSI
+into a \emph{content} code carrying gesture/activity information and a \emph{domain} code
+carrying the layout and hardware conditions, and (ii) at inference retrieves, from a
+geometry-tagged memory, the layout entries most consistent with the current signal
+statistics and conditions the classifier on them. Adaptation to a new space then reduces
+to inserting that space into the memory once --- no labelled target data and no gradient
+retraining --- which is the regime that deployment actually imposes.
+
+\subsection*{Contributions}
+\begin{itemize}
+\item We formulate cross-domain CSI sensing as \emph{retrieval-conditioned
+perception}: the domain code is preserved as a retrieval key instead of being discarded,
+and a new environment is handled by memory insertion rather than retraining
+(Section~\ref{sec:method}).
+\item We give a self-supervised disentanglement objective for CSI with an explicit
+independence penalty and physics-informed augmentations, and we state precisely which
+invariance each term buys (Section~\ref{sec:method}).
+\item We specify a falsifiable evaluation protocol with claim-to-experiment mapping,
+strong DA/DG/few-shot baselines, and a memory-free ablation that isolates the retrieval
+contribution (Section~\ref{sec:protocol}), and we report \DECISION{statistical tests to be
+fixed: paired bootstrap / McNemar} rather than single-run accuracies.
+\end{itemize}
+
+\TODO{contribution 3 currently promises an evaluation that has not been executed; either
+run it or soften the claim before submission.}
+
+% =====================================================================
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Cross-domain Wi-Fi sensing: the problem and its taxonomy}
+CSI is a sampled complex channel response; its magnitude and phase respond both to human
+motion and to the static geometry of the deployment. Chen et al.\ \cite{Chen2022Survey}
+formalise the domain shift this creates and group remedies into five families ---
+domain-invariant feature extraction, virtual sample generation, transfer learning,
+few-shot learning, and big-data solutions --- and find each has distinct limitations.
+Wang et al.\ \cite{Wang2025GeneralizabilitySurvey} review over 200 papers by pipeline
+stage, covering domain adaptation, meta-learning, metric learning, augmentation,
+cross-modal alignment, federated and continual learning, and release a dataset platform;
+they list pretraining at scale, multimodal foundation models, and continual deployment as
+the open directions. Radwan et al.\ \cite{Radwan2025Survey} survey specifically the
+self-supervised variants, contrasting contrastive and non-contrastive objectives, and
+publish a comparative accuracy analysis; Sai et al.\ \cite{Sai2026Review} give a broader
+review of machine-learning methods for CSI recognition. Zhang et al.\
+\cite{Zhang2026BeyondLabels} argue that the conventional factorisation of domains
+(room / user / orientation) is itself the limitation, and redefine domains to make
+generalisation claims measurable. We adopt that critique: our formulation keeps the
+domain as an explicit, retrievable variable rather than treating all shift as one
+undifferentiated nuisance.
+
+\subsection{Domain adaptation and generalisation}
+Adaptation-based methods assume some target access. Fidora \cite{Chen2022Fidora} combines a
+variational-autoencoder augmenter with a joint classification--reconstruction classifier
+and reports gains for new users (+17.8\% average F1) and for a changed environment
+(beating the prior state of the art by 23.1\%). Yang et al.\ \cite{Yang2021IGLDA} raise
+localisation accuracy from 26.3\% to 82.2\% by recollecting 37.5\% of the data under an
+improved global/local metric method. CrossSense \cite{Zhang2018CrossSense} generates
+synthetic per-environment training samples with a roaming model plus a mixture of experts,
+lifting gait and gesture accuracy from 20\% to over 80--90\%. AdaWiFi
+\cite{Zheng2025AdaWiFi} lets multiple IoT devices sense collaboratively and reports
+roughly 30\% higher accuracy under one-shot adaptation. Prasad et al.\
+\cite{Prasad2024DANN} adversarially learn domain-invariant compressed RSS features with a
+gradient reversal layer, and Zhang et al.\ \cite{Zhang2025OnlineDFL} maintain an updatable
+radio map with a forgetting mechanism so that sequential data from other times and
+layouts can be absorbed without retraining. Wi-Cro \cite{Mao2024WiCro} translates source
+data into the target style with a GAN and applies metric learning; Avola et al.\
+\cite{Avola2025RaGAN} suppress domain-specific features with a relativistic-average GAN
+validated inside a constructed Faraday cage. Source-free adaptation removes the need for
+source data: Wi-SFDAGR \cite{Yan2025WiSFDAGR} treats adaptation as unsupervised clustering
+with an attraction--dispersion network and uncertainty-weighted neighbours.
+Li et al.\ \cite{Li2026Conformal} sidestep retraining with conformal prediction over
+multivariate kernel density estimates, reporting accuracy improvements from 30\% to 74\%
+across six kinds of domain variation, and He et al.\ \cite{He2025CrossSubject} transfer
+across subjects, while Mehryar \cite{Mehryar2023PassiveWiFi} places a few-shot adaptation
+stage above a cross-modal recognition layer for deployment-time robustness.
+\method{} differs in that it neither requires unlabelled target data at
+adaptation time nor retrains: it conditions on a retrieved description of the space.
+
+Generalisation-based methods need only source data. Widar3.0 \cite{Zheng2019Widar3}
+estimates body-coordinate velocity profiles as a physically domain-independent
+representation and reaches 82.6--92.4\% cross-domain with one-time training. WiSR
+\cite{Liu2024WiSR} randomises subcarrier-domain "styles" adversarially, and WiSGP
+\cite{Liu2024WiSGP} perturbs inputs along subdomain directions, both targeting
+multi-factor generalisation without target data. AirFi \cite{Wang2022AirFi} learns the
+critical CSI part for unseen environments; ARC-Fi \cite{Xu2023ARCFi} targets the more
+realistic semi-supervised setting where unlabelled CSI is plentiful but labels are scarce,
+and blocks "shortcut learning" with an antenna-response-consistency augmentation that
+treats co-located antennas as natural views. XFall \cite{Chi2024XFall} instead exploits an
+environment-independent speed-distribution profile with cross-modal visual supervision,
+reporting 96.8\% over a year-long deployment. Our augmentations are in the same spirit as
+ARC-Fi's, and we are explicit that this is inherited rather than novel.
+
+\subsection{Few-shot and prototype-based matching}
+FewSense \cite{Yin2022FewSense} pretrains a feature extractor and fine-tunes it on a few
+target samples, reaching 93.9/96.5/82.7\% five-shot accuracy on SignFi/Widar/Wiar with
+collaborative multi-receiver fusion adding 29.2\%. CrossFi \cite{Zhao2024CrossFi} replaces
+cosine similarity with an attention-based similarity network and a class-template
+generator, reporting 91.72\% one-shot and 64.81\% zero-shot cross-domain. FewCS
+\cite{Yang2023FewCS} clusters intra-domain prototypes and extracts cross-domain prototypes
+in a shared space for edge--cloud online learning. WiGNN \cite{Chen2024WiGNN} models
+multi-receiver CSI as a graph and averages 94.0\% cross-domain on Widar3.0. These systems
+are the closest in spirit to retrieval --- matching a query against stored exemplars ---
+but their memory holds \emph{class prototypes}, not \emph{spatial descriptions}, so they
+cannot exploit the fact that the room is known.
+
+\subsection{Self-supervised representation learning and foundation models}
+AutoFi \cite{Yang2022AutoFi} learns from randomly captured low-quality unlabelled CSI with
+a geometric self-supervised objective and transfers across tasks. WiFiAct
+\cite{Lyons2024WiFiAct} pairs an environment-robust preprocessing pipeline with a Bayesian
+CNN and contrastive augmentation. Context-aware predictive coding \cite{Barahimi2024CPC},
+temporal--frequency masked autoencoding for localisation \cite{Liu2026SSLMAE},
+cross-modal-guided MAE \cite{Liu2025CIGMAE}, CSI-MAE \cite{Jiang2026CSIMAE}, a
+CIR--CSI-consistency MIMO channel foundation model \cite{Jiang2025MIMO}, JEPA-style
+objectives \cite{Kim2026WiFiJEPA,Luo2026CSIJEPA}, parameter-efficient adapters
+\cite{Custance2026Adapter}, source-free multi-user adaptation \cite{Radwan2026MUSHOTFi},
+and a Siamese CNN--Transformer channel-charting model robust to transmitter relocation
+\cite{Lee2026PCC} all build encoders without labels. The evaluation of Xu et al.\
+\cite{Xu2025EvalSSL} benchmarks these objectives for CSI activity recognition, while
+Jiang et al.\ \cite{Jiang2025Foundation} pretrain masked autoencoders on 1.3M samples from
+14 datasets and find log-linear gains with pretraining data --- concluding that data, not
+capacity, is the bottleneck --- and Gong et al.\ \cite{Gong2026WiSwiss} pre-train on
+multi-source datasets. \method{} inherits this encoder-scaling result: our contribution is
+what happens \emph{after} the encoder, and is complementary to pretraining scale.
+
+\subsection{Retrieval augmentation and explicit external memory}
+RAG conditions generation on retrieved non-parametric context \cite{lewis2020rag}, and
+spatial variants constrain retrieval with geometric relations \cite{spatial_rag}. In
+wireless, ENWAR \cite{Nazar2024Enwar} builds a RAG-empowered multimodal LLM framework for
+wireless environment perception, extended in ENWAR~2.0 \cite{Nazar2026Enwar2} with adaptive
+knowledge-base formation, chain-of-thought reasoning and beam tracking; Wi-Chat
+\cite{wi_chat} shows an LLM can interpret CSI for activity recognition when prompted with
+sensing principles. These systems put retrieval in service of language-level perception.
+Wang et al.\ \cite{Wang2025GeneralizabilitySurvey} raise the open question of RAG as
+on-demand Wi-Fi knowledge. To our knowledge, no prior work uses a spatially-indexed
+retrieval memory as the cross-domain adaptation mechanism for a CSI sensing head, which is
+the gap we target. \TODO{re-run a targeted search for "retrieval-augmented CSI sensing" and
+"environment-conditioned Wi-Fi sensing" immediately before submission; this is the novelty
+claim most likely to be scooped.}
+
+% =====================================================================
+\section{Method}
+\label{sec:method}
+
+\subsection{Problem formulation}
+Let $x\in\mathbb{R}^{N_s\times N_t}$ denote a CSI window with $N_s$ subcarriers and $N_t$
+time samples, and $y\in\{1,\dots,C\}$ its activity label. We associate each measurement
+with a domain descriptor $d$ that is available \emph{at inference} without labels: a coarse
+geometric signature of the space (transmitter--receiver geometry, coarse distance bins
+derived from the signal statistics) optionally plus installation metadata
+\DECISION{final descriptor content}. Standard cross-domain sensing trains
+$f_\theta(x)\!\to\!y$ on source domains $\{d_s\}$ and is evaluated on an unseen $d_t$,
+treating $d$ as nuisance. We instead model
+\begin{equation}
+p(y\mid x, \mathcal{M}) \;=\; \sum_{m \in \mathrm{TopK}(x,\mathcal{M})} w_m \, p_\phi\!\left(y \mid \zc(x),\, m\right),
+\label{eq:main}
+\end{equation}
+where $\zc(x)$ is a content code, $\mathcal{M}=\{(\rho_m, e_m)\}$ is a memory of
+spatial/layout entries ($\rho_m$ a geometric descriptor, $e_m$ its conditioning embedding),
+and $w_m$ are retrieval weights (Eq.~\eqref{eq:main}). Adaptation to a new environment
+consists of inserting an entry into $\mathcal{M}$; the parameters $\theta,\phi$ are untouched.
+
+\subsection{Stage 1: self-supervised disentanglement}
+An encoder $E_\theta$ maps $x$ to $(\zc,\zd)$ by splitting the embedding into two
+sub-vectors, decoded jointly:
+\begin{equation}
+\hat{x} = D_\psi(\zc, \zd), \qquad
+\mathcal{L}_{\mathrm{rec}} = \|x-\hat{x}\|_2^2 .
+\end{equation}
+Content must be predictive of the label for labelled source windows,
+$\mathcal{L}_{\mathrm{cls}} = \mathrm{CE}\big(y, g_\phi(\zc)\big)$, while the domain code
+must be predictable from the signal statistics but \emph{not} from the content code, and
+vice versa. We enforce statistical independence with an HSIC-style penalty
+\DECISION{HSIC vs adversarial classifier --- both are defensible; the adversarial variant
+matches \cite{Kang2021ContextAware} and is easier to tune, HSIC is more stable}:
+\begin{equation}
+\mathcal{L}_{\mathrm{ind}} = \mathrm{HSIC}(\zc, \zd) \;\; \text{or} \;\;
+\min_{E_\theta}\max_{h}\ \mathcal{L}_{\mathrm{adv}}(h(\zc),\zd).
+\end{equation}
+Finally we add physics-informed augmentations that generate views of the same event which
+differ in domain but not in content --- co-located antenna responses
+\cite{Xu2023ARCFi}, subcarrier-domain style randomisation \cite{Liu2024WiSR}, and
+subdomain-guided perturbation \cite{Liu2024WiSGP} --- with a consistency loss
+$\mathcal{L}_{\mathrm{con}}$ between the content codes of two views. The total source
+objective is
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \lambda_1 \mathcal{L}_{\mathrm{cls}}
++ \lambda_2 \mathcal{L}_{\mathrm{ind}} + \lambda_3 \mathcal{L}_{\mathrm{con}} .
+\label{eq:total}
+\end{equation}
+\DECISION{values of $\lambda_{1..3}$, embedding split ratio, window length $N_t$,
+subcarrier sampling} --- these are hyperparameters to be tuned on source domains only
+(Eq.~\eqref{eq:total}), and must be reported in the final paper.
+
+\subsection{Stage 2: spatially-indexed retrieval memory}
+Each memory entry stores a geometric descriptor and the domain embedding of a reference
+capture from that space,
+$\rho_m = \big[\phi_{\mathrm{geom}}(x^{(m)}_{\mathrm{ref}}),\, \text{meta}_m\big]$,
+$e_m = \zd(x^{(m)}_{\mathrm{ref}})$. At inference we retrieve the top-$K$ entries by
+descriptor similarity, weight them by softmax over similarity, and condition the label
+head on the concatenation $[\zc(x); \sum_m w_m e_m]$. Because $e_m$ is an embedding, a new
+room can also be added \emph{label-free}: a short unattended capture supplies $\rho_m$ and
+$e_m$. Algorithm~\ref{alg:relay} states the procedure.
+\begin{equation}
+w_m = \frac{\exp\!\big(s(\rho(x),\rho_m)/\tau\big)}{\sum_{k\in\mathrm{TopK}}\exp\!\big(s(\rho(x),\rho_k)/\tau\big)} .
+\end{equation}
+
+\begin{algorithm}[t]
+\caption{\method{} inference (adaptation = memory insertion, no retraining)}
+\label{alg:relay}
+\begin{algorithmic}[1]
+\Require frozen $E_\theta$, head $g_\phi$, memory $\mathcal{M}$, window $x$ from an unseen space
+\State $(\zc, \zd) \gets E_\theta(x)$
+\State $\rho \gets \phi_{\mathrm{geom}}(x)$
+\State $S \gets \mathrm{TopK}\big(s(\rho,\rho_m)\ \forall m\big)$
+\If{$\max_m s(\rho,\rho_m) < \delta$}                       \Comment{unknown space}
+    \State flag \textsc{out-of-memory}; optionally insert a label-free entry from a short capture
+\EndIf
+\State $w_m \gets \mathrm{softmax}\big(s(\rho,\rho_m)/\tau\big)$ over $S$
+\State \Return $g_\phi\big([\zc; \textstyle\sum_{m\in S} w_m e_m]\big)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Why retrieval instead of pure invariance}
+Under cross-entropy with a domain-adversarial penalty the encoder is pushed to remove
+domain information. If two domains require different decision boundaries --- which is the
+empirical finding behind the multi-subdomain results of \cite{Liu2024WiSGP} and the
+domain-redefinition argument of \cite{Zhang2026BeyondLabels} --- invariance removes the
+information needed to select the right boundary. Keeping $\zd$ and \emph{retrieving} the
+matching context makes the boundary a function of retrieved state, which is exactly what
+the deployment regime offers for free: an installer who knows the room. This also gives the
+system an honest failure mode via the out-of-memory branch in
+Algorithm~\ref{alg:relay}, in the spirit of the conformal reliability of
+\cite{Li2026Conformal}.
+
+% =====================================================================
+\section{Experimental Protocol}
+\label{sec:protocol}
+
+\subsection{Claim-to-experiment map}
+Table~\ref{tab:claims} fixes the mapping required of this paper: every experiment exists to
+test one claim, and each row states what would falsify it. No row has been run yet; the
+placeholders in Section~\ref{sec:results} fix where each outcome will be reported.
+
+\begin{table*}[t]
+\centering
+\caption{Claim--experiment map. Falsification conditions are stated before the experiments
+are run, to prevent post-hoc storytelling.}
+\label{tab:claims}
+\small
+\begin{tabular}{p{0.05\textwidth}p{0.24\textwidth}p{0.29\textwidth}p{0.32\textwidth}}
+\toprule
+\# & Claim & Experiment / evidence & What would falsify it \\
+\midrule
+C1 & Disentanglement separates content from domain: $\zc$ transfers, $\zd$ does not. & Linear probe of $y$ from $\zc$ and of environment identity from $\zd$, on held-out domains; compare against a joint encoder and against an adversarially invariant encoder. & High label accuracy from $\zd$, or $\zd$ predicting environment at chance for the invariant baseline --- either one means the split is not doing what we claim. \\
+C2 & Retrieval conditioning improves cross-domain accuracy over the same encoder without memory. & Memory-free ablation: identical weights, memory disabled. & No difference beyond noise across seeds. \\
+C3 & Adaptation by memory insertion is competitive with adaptation that trains on target data. & Compare against DA baselines (Fidora \cite{Chen2022Fidora}, DANN-R \cite{Prasad2024DANN}, Wi-SFDAGR \cite{Yan2025WiSFDAGR}) under a \DECISION{1-shot / 5-shot} target budget. & Baselines win decisively while requiring labelled target data --- then the retrieval path has no advantage to report. \\
+C4 & The out-of-memory branch detects spaces the memory does not cover. & Accuracy/calibration when querying with an environment deliberately withheld from $\mathcal{M}$. & Flag never fires, or fires on in-memory queries at a high rate. \\
+C5 & Gains are not explained by encoder pretraining alone. & Match a self-supervised baseline scaled to equal pretraining data. & Baseline equals \method{} without retrieval --- then retrieval contributes nothing. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Datasets and splits}
+\DECISION{dataset selection --- pick from, and justify: Widar3.0 \cite{Zheng2019Widar3}
+(gesture, the standard cross-domain benchmark: cross-location, cross-orientation,
+cross-environment), SignFi / Wiar \cite{Yin2022FewSense}, CSIDA \cite{Xu2023ARCFi},
+XRF55 \cite{Yan2025WiSFDAGR}. If a layout-change protocol is needed, note that Widar3.0's
+domain factors already separate environment from location and orientation, which suits C1.}
+Data collection for a new layout, if performed, must be reported with device counts,
+sampling rate, number of subcarriers, distances, and the exact layout changes made.
+
+\subsection{Baselines}
+Include at least: (i) a supervised CNN trained on source domains only --- the naive
+baseline; (ii) domain-invariant feature extraction \cite{Zheng2019Widar3}; (iii) style
+randomisation / perturbation methods \cite{Liu2024WiSR,Liu2024WiSGP}; (iv) adaptation
+methods \cite{Chen2022Fidora,Prasad2024DANN,Yan2025WiSFDAGR,Zheng2025AdaWiFi};
+(v) few-shot prototype matching \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS};
+(vi) a self-supervised encoder without retrieval \cite{Yang2022AutoFi,Barahimi2024CPC};
+(vii) a reliability-oriented baseline \cite{Li2026Conformal}. Report each baseline's
+compute and tag requirements in the table --- a win against a method that needed 10$\times$
+the labels is not the same claim as a win under equal budget.
+
+\subsection{Metrics and statistics}
+Primary: activity accuracy and macro-F1 (higher better); for localisation variants, mean
+absolute error in centimetres (lower better). Report mean $\pm$ standard deviation over
+\DECISION{$\geq$ 5 seeds} and 95\% confidence intervals from \DECISION{paired bootstrap
+(10k resamples)}; for paired comparisons of two methods on the same test items use
+McNemar's exact test and report $p$ and the effect size, not $p$ alone. State the seed
+control, the hardware, and total GPU hours. \DECISION{All of the above is design, not
+result: no number in this manuscript has been measured.}
+
+\subsection{Implementation status}
+The runner, the baseline harness, the statistical analysis, and the figure generation are
+specified in \texttt{HANDOFF.md} and are intended to live in
+\texttt{experiments/}, \texttt{analysis/} and \texttt{figures/}. Until those exist and
+have been executed, Sections~\ref{sec:results}--\ref{sec:discussion} remain scaffolds.
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+
+\RESULTNEEDED{Table 1 --- main cross-domain comparison: rows = methods, columns = domain
+factor (environment, location, orientation, user), cells = accuracy/F1 mean\,$\pm$\,std
+over seeds. No cell may be filled except from an executed run.}
+
+\RESULTNEEDED{Figure 2 --- per-environment breakdown plus the memory-free ablation (C2),
+and the 1-/5-shot comparison with DA baselines (C3).}
+
+\RESULTNEEDED{Table 2 --- disentanglement diagnostics for C1: probing accuracy of the
+label from $\zc$, of environment identity from $\zd$, and the independence estimate.}
+
+\RESULTNEEDED{Table 3 --- out-of-memory detection for C4: flag rate and post-flag
+accuracy on withheld environments.}
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox{0.92\columnwidth}{\centering\vspace{1.4em}
+\textcolor{red}{\textbf{[FIGURE PLACEHOLDER]}}\\[0.4em]
+\small Figure~1: system overview --- CSI window $\to$ shared encoder $\to$ ($\zc$, $\zd$)
+split $\to$ top-$K$ retrieval over the geometry-tagged memory $\to$ conditioned classifier.
+Draw this once the pipeline is frozen; do not reuse a schematic that depicts components the
+code does not implement.\vspace{1.4em}}}
+\caption{System overview. \RESULTNEEDED{replace placeholder with vector PDF
+(\texttt{figures/fig1\_overview.pdf}).}}
+\label{fig:overview}
+\end{figure}
+
+% =====================================================================
+\section{Discussion, Limitations, and Threats to Validity}
+\label{sec:discussion}
+
+\textbf{No empirical evidence yet.} This draft reports a method and a protocol. It
+contains no measured results, and no accuracy, F1, or error figure anywhere in the text
+should be read as one. The only numbers that appear are those quoted from prior work and
+attributed to it.
+
+\textbf{Novelty risk.} The retrieval-for-adaptation idea sits close to two literatures:
+prototype/few-shot matching \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS} and
+wireless RAG \cite{Nazar2024Enwar,Nazar2026Enwar2}. The distinguishing claim --- spatially
+indexed memory conditioning a sensing head, updated label-free --- must survive a fresh
+search and a carefully worded related-work section. If a concurrent paper makes the same
+move, the fallback contribution is the disentanglement-plus-retrieval interaction (C1, C2,
+C5), which is testable independently.
+
+\textbf{Disentanglement assumptions.} Perfect separation of content and domain is not
+achievable in general; residual leakage is expected, and C1's probes are designed to
+measure it rather than assert it. If $\zd$ leaks gesture information, the retrieval
+conditioning becomes a soft shortcut that could inflate in-domain scores without
+transferring.
+
+\textbf{Retrieval realism.} The memory must be populated from captures that are cheap to
+obtain, otherwise the approach relocates the data-collection burden rather than removing
+it. The protocol must therefore report exactly what a new entry costs (duration of
+unattended capture, number of devices, whether the space must be empty), and compare that
+cost against the labelled data the baselines need.
+
+\textbf{Privacy.} CSI is frequently preferred over cameras because it does not image
+people \cite{Radwan2025Survey}. The geometric descriptors we store are a property of the
+space, not of a person, and the memory must be specified so that it cannot be inverted into
+person-identifying information. This is a design constraint, not an afterthought.
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We propose \method{}, which treats the environment in cross-domain Wi-Fi CSI sensing as
+retrievable context rather than nuisance: a self-supervised objective factorises a CSI
+window into content and domain codes, and a spatially indexed memory conditions the
+classifier on the space in which the measurement was taken, so that a new room is handled
+by inserting an entry instead of retraining a model. We have stated the method, the
+falsifiable claim--experiment mapping, and the baseline set that would establish or refute
+it. The empirical work --- five claims, the runnable protocol in \texttt{HANDOFF.md} ---
+remains to be executed, and no result in this manuscript has been measured. The immediate
+next step is to run the source-domain training and the memory-free ablation (C1, C2) on
+Widar3.0, because those two results decide whether the rest of the paper is worth writing.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references_verified}
+
+% =====================================================================
+\appendices
+\section{Reference audit}
+\label{app:refs}
+Every citation in this paper was resolved programmatically against Crossref, arXiv, or
+DBLP; no entry was written from memory. The audit table, including corrections made to the
+supplied reference list (year and venue mismatches, one abstract attributed to the wrong
+paper, and two entries that could not be verified at all) is in
+\texttt{references\_report.md}. \TODO{one supplied entry --- Puspitasari (2014), \emph{Analisis RSSI terhadap
+ketinggian perangkat Wi-Fi di lingkungan indoor} --- has no DOI and could not be
+verified through Crossref, arXiv, or DBLP. It is therefore \emph{not} in the
+bibliography and is marked \textbf{[CITATION NEEDED]} wherever it is used: locate its
+publisher record or drop the citation.}
+
+\end{document}
