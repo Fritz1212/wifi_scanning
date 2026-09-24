@@ -21,6 +21,7 @@
 \usepackage{cite}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{tikz}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{url}
@@ -46,40 +47,126 @@
 
 \begin{document}
 
+% Cover page, typeset in LaTeX. The manuscript below is unmodified.
+\onecolumn
+\thispagestyle{empty}
+\null
+\begin{tikzpicture}[remember picture,overlay]
+  \coordinate (covercenter) at (current page.north);
+  \node[anchor=north,font=\bfseries\fontsize{10}{12}\selectfont]
+    at ([yshift=-0.10in]covercenter) {PROPOSAL SKRIPSI ARTIKEL ILMIAH};
+
+  \node[anchor=north,align=center,text width=6.6in,font=\bfseries\fontsize{9}{13}\selectfont]
+    at ([yshift=-0.87in]covercenter)
+    {Persepsi CSI Wi-Fi Lintas Domain melalui Pemisahan Representasi Mandiri dan \textit{Spatial}};
+  \node[anchor=north,font=\bfseries\itshape\fontsize{9}{12}\selectfont]
+    at ([yshift=-1.28in]covercenter) {Retrieval-Augmented Generation};
+
+  \node[anchor=north,align=center,text width=6.4in,font=\bfseries\fontsize{9}{14}\selectfont]
+    at ([yshift=-2.06in]covercenter)
+    {Cross-Domain Wi-Fi CSI Perception via Self-Supervised Disentanglement and Spatial Retrieval-};
+  \node[anchor=north,font=\bfseries\fontsize{9}{12}\selectfont]
+    at ([yshift=-2.47in]covercenter) {Augmented Generation};
+
+  \node[anchor=north,font=\fontsize{9}{12}\selectfont]
+    at ([yshift=-3.31in]covercenter) {\textbf{Topik:} Intelegensia Semu};
+
+  \node[anchor=north,font=\fontsize{9}{12}\selectfont]
+    at ([yshift=-4.10in]covercenter)
+    {2702387973 / CHRISTOPHER RICKY SOEHARTONO / Computer Science};
+  \node[anchor=north,font=\fontsize{9}{12}\selectfont]
+    at ([yshift=-4.52in]covercenter)
+    {2702363651 / FRITZ GRADIYOGA / Computer Science};
+  \node[anchor=north,font=\fontsize{9}{12}\selectfont]
+    at ([yshift=-4.94in]covercenter)
+    {2702363765 / JESSICA NATHANIA WENARDI / Computer Science};
+
+  % BINUS emblem and lettering drawn as editable vector elements.
+  \begin{scope}[shift={([yshift=-5.72in]covercenter)},x=1cm,y=1.6cm]
+    \draw[gray!65,line width=1.1pt] (-3.05,-0.72) -- (3.05,-0.72);
+    \draw[red!85!black,line width=.55pt] (0,0.10) -- (0,-2.32);
+    \fill[red!85!black] (0,0.10) circle (1.5pt);
+    \fill[red!85!black] (0,-2.32) circle (1.5pt);
+    \fill[red!85!black] (-3.05,-0.72) circle (1.5pt);
+    \fill[red!85!black] (3.05,-0.72) circle (1.5pt);
+    \draw[gray!70,line width=3.0pt] (0.15,-.34) arc[start angle=65,end angle=305,x radius=.92,y radius=.70];
+    \fill[orange!90!yellow] (0,-.76) circle (.40cm);
+    \fill[white] (-.15,-.57) circle (.055cm);
+    \foreach \x/\y in {.55/-.20,.72/-.14,.81/-.27,.98/-.13,1.10/-.42,
+       .74/-.45,.90/-.55,1.12/-.62,.62/-.72,.81/-.81,1.23/-.30,
+       .99/-.77,1.34/-.11,1.52/-.50,1.38/-.76,1.68/-.19}
+       \fill[gray!60] (\x,\y) rectangle ++(.055,.055);
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{24}{26}\selectfont,text=black!88]
+       at (.45,-1.65) {BINUS};
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{19}{21}\selectfont,text=cyan!75!blue]
+       at (.47,-2.68) {UNIVERSITY};
+  \end{scope}
+
+  \node[anchor=north,font=\bfseries\fontsize{9}{12}\selectfont]
+    at ([yshift=-8.44in]covercenter) {BINUS University};
+  \node[anchor=north,font=\bfseries\fontsize{9}{12}\selectfont]
+    at ([yshift=-8.87in]covercenter) {2026};
+  \node[anchor=north west,font=\fontsize{9}{12}\selectfont]
+    at ([xshift=.98in,yshift=-9.51in]current page.north west) {DIPERIKSA OLEH};
+  \node[anchor=north west,align=left,font=\fontsize{8}{9}\selectfont]
+    at ([xshift=.73in,yshift=-10.61in]current page.north west)
+    {D3557 - Ir. Andry Chowanda, S.Kom, MM,\\
+     Ph.D., MBCS, CCP, CME, IPM, SMIEEE};
+\end{tikzpicture}
+\clearpage
+\twocolumn
+
+
 \title{Cross-Domain Wi-Fi CSI Perception via Self-Supervised\\
 Disentanglement and Spatial Retrieval-Augmented Generation}
 
 \author{
-    \IEEEauthorblockN{Christopher Ricky \\ Soehartono}
-    \IEEEauthorblockA{\textit{Computer Science Department} \\
-    \textit{School of Computer Science} \\
-    \textit{Bina Nusantara University} \\
-    Jakarta, Indonesia 11480 \\
-    christopher.soehartono@binus.ac.id}
-    \and
-    \IEEEauthorblockN{Fritz Gradiyoga}
-    \IEEEauthorblockA{\textit{Computer Science Department} \\
-    \textit{School of Computer Science} \\
-    \textit{Bina Nusantara University} \\
-    Jakarta, Indonesia 11480 \\
-    fritz.gradiyoga@binus.ac.id}
-    \and
-    \IEEEauthorblockN{Jessica Nathania Wenardi}
-    \IEEEauthorblockA{\textit{Computer Science Department} \\
-    \textit{School of Computer Science} \\
-    \textit{Bina Nusantara University} \\
-    Jakarta, Indonesia 11480 \\
-    jessica.wenardi@binus.ac.id}
-    
-    % Trik untuk memaksa baris baru dan menempatkan penulis ke-4 di tengah
-    \end{tabular}\hfil\\[1cm]\begin{tabular}[t]{c}
-    
-    \IEEEauthorblockN{Ir. Andry Chowanda, S.Kom, MM, Ph.D., \\ MBCS, CCP, CME, IPM, SMIEEE}
-    \IEEEauthorblockA{\textit{Computer Science Department} \\
-    \textit{School of Computer Science} \\
-    \textit{Bina Nusantara University} \\
-    Jakarta, Indonesia 11480 \\
-    achowanda@binus.edu}
+\begin{tabular}[t]{ccc}
+
+\begin{tabular}[t]{c}
+\IEEEauthorblockN{Christopher Ricky Soehartono} \\[-0.8cm]
+\IEEEauthorblockA{\textit{Computer Science Department} \\
+\textit{School of Computer Science} \\
+\textit{Bina Nusantara University} \\
+Jakarta, Indonesia 11480 \\
+christopher.soehartono@binus.ac.id}
+\end{tabular}
+
+&
+
+\begin{tabular}[t]{c}
+\IEEEauthorblockN{Fritz Gradiyoga} \\[-0.8cm]
+\IEEEauthorblockA{\textit{Computer Science Department} \\
+\textit{School of Computer Science} \\
+\textit{Bina Nusantara University} \\
+Jakarta, Indonesia 11480 \\
+fritz.gradiyoga@binus.ac.id}
+\end{tabular}
+
+&
+
+\begin{tabular}[t]{c}
+\IEEEauthorblockN{Jessica Nathania Wenardi} \\[-0.8cm]
+\IEEEauthorblockA{\textit{Computer Science Department} \\
+\textit{School of Computer Science} \\
+\textit{Bina Nusantara University} \\
+Jakarta, Indonesia 11480 \\
+jessica.wenardi@binus.ac.id}
+\end{tabular}
+
+\end{tabular}
+
+\\[1cm]
+
+\begin{tabular}[t]{c}
+\IEEEauthorblockN{Ir. Andry Chowanda, S.Kom, MM, Ph.D.,} \\[-0.8cm]
+\IEEEauthorblockN{MBCS, CCP, CME, IPM, SMIEEE} \\[-0.8cm]
+\IEEEauthorblockA{\textit{Computer Science Department} \\
+\textit{School of Computer Science} \\
+\textit{Bina Nusantara University} \\
+Jakarta, Indonesia 11480 \\
+achowanda@binus.edu}
+\end{tabular}
 }
 
 \maketitle
