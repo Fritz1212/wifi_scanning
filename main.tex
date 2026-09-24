@@ -228,77 +228,58 @@ learning, disentangled representation, retrieval-augmented generation.
 \section{Introduction}
 \label{sec:intro}
 
-Wi-Fi sensing infers human activity from the channel state information (CSI) that
-commodity network interface cards already expose, and it is attractive precisely because
-it needs no new hardware, works through walls, and observes no images
-\cite{Chen2022Survey,Radwan2025Survey}. Its central weakness is equally well documented:
-a CSI sample mixes what the person is doing with where the measurement is taken. The same
-gesture performed in a different room, at a different distance from the transmitter, or
-after a door is opened produces a CSI trajectory that a classifier trained in the original
-setting misreads. Reported cross-domain drops are severe --- the survey of Chen
-et al.\ \cite{Chen2022Survey} and the more recent taxonomy of Wang et al.
-\cite{Wang2025GeneralizabilitySurvey} both organise an entire literature around the
-problem of maintaining accuracy when "the deployment domain is not the training domain",
-and Zhang et al.\ \cite{Zhang2026BeyondLabels} argue the very definition of a domain
-under-specifies the factors that matter.
+Wi-Fi sensing uses channel state information (CSI) from commodity Wi-Fi devices to
+recognise human activities without cameras or additional sensing hardware
+\cite{Chen2022Survey,Radwan2025Survey}. Its main challenge is poor generalisation across
+environments: CSI captures both human motion and the surrounding propagation conditions,
+so the same activity can produce different signals when the room, device placement, or
+orientation changes \cite{Chen2022Survey,Wang2025GeneralizabilitySurvey,
+Zhang2026BeyondLabels}.
 
-Prior work attacks this along a well-charted axis. \emph{Domain adaptation} aligns source
-and target feature distributions from unlabelled target data \cite{Yang2021BookChapter,
-Chen2022Fidora,Mao2024WiCro,Prasad2024DANN}, \emph{domain generalisation} instead seeks
-invariance from source data alone \cite{Liu2024WiSR,Liu2024WiSGP,Wang2022AirFi,
-Xu2023ARCFi}, \emph{few-shot} methods match a handful of target samples against learned
-prototypes \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS}, and \emph{self-supervised}
-pretraining turns cheap unlabelled CSI into a transferable encoder
-\cite{Yang2022AutoFi,Barahimi2024CPC,Lyons2024WiFiAct,Radwan2025Survey}. Two observations
-motivate this paper.
+Existing solutions mainly use \emph{domain adaptation} (DA), \emph{domain
+generalisation} (DG), few-shot learning, or self-supervised learning. DA aligns source and
+target distributions but requires target-domain data
+\cite{Yang2021BookChapter,Chen2022Fidora,Mao2024WiCro,Prasad2024DANN}. DG and
+self-supervised approaches instead learn representations that transfer across domains
+\cite{Liu2024WiSR,Liu2024WiSGP,Wang2022AirFi,Xu2023ARCFi,Yang2022AutoFi,
+Barahimi2024CPC,Lyons2024WiFiAct}, while few-shot methods adapt using a small number of
+target examples \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS}. However, making a
+representation fully invariant to the environment may discard useful contextual
+information. Disentanglement provides another option by separating activity information
+from environment-specific factors \cite{Kang2021ContextAware}.
 
-First, invariance is a lossy target. When a model is trained to be blind to the
-environment, it discards information that is genuinely useful for deciding whether a
-reading is plausible --- a fall signature in a narrow corridor and in an open hall are not
-the same measurement, and a system that cannot tell the two apart has no way to notice
-that it is being asked about a space it has never modelled. Disentanglement decomposes
-this problem rather than deleting it \cite{Kang2021ContextAware}, but the domain factor is
-then usually thrown away, used only adversarially.
+Retrieval-augmented generation (RAG) offers a way to preserve and reuse such contextual
+information. Wang et al.\ \cite{Wang2025GeneralizabilitySurvey} identify external
+retrieval as a possible direction for Wi-Fi sensing, while RAG has already been explored
+in language models \cite{lewis2020rag}, wireless systems
+\cite{Nazar2024Enwar,Nazar2026Enwar2,wi_chat}, and spatial reasoning
+\cite{spatial_rag}. However, existing work does not use retrieval of spatial or layout
+information as the adaptation mechanism for cross-domain CSI sensing.
 
-Second, the field already names the missing ingredient. The generalisability survey of
-Wang et al.\ \cite{Wang2025GeneralizabilitySurvey} explicitly asks whether
-retrieval-augmented generation (RAG) can act as "an external database" that "allows the
-model to access Wi-Fi knowledge on demand". In the language-model literature that idea is
-mature \cite{lewis2020rag}, and it has begun to reach wireless systems
-\cite{Nazar2024Enwar,Nazar2026Enwar2,wi_chat} and spatially-constrained reasoning
-\cite{spatial_rag}. To our knowledge no work uses retrieval over \emph{spatial/layout}
-descriptions as the adaptation mechanism for cross-domain CSI \emph{sensing}: retrieval has
-been applied to network management and to interpreting CSI with language models, not to
-supplying the sensing head with the layout of the room it is currently in.
-
-We therefore propose \method{}, which (i) learns a self-supervised factorisation of CSI
-into a \emph{content} code carrying gesture/activity information and a \emph{domain} code
-carrying the layout and hardware conditions, and (ii) at inference retrieves, from a
-geometry-tagged memory, the layout entries most consistent with the current signal
-statistics and conditions the classifier on them. Adaptation to a new space then reduces
-to inserting that space into the memory once --- no labelled target data and no gradient
-retraining --- which is the regime that deployment actually imposes.
+We therefore propose \method{}, a framework that combines self-supervised
+disentanglement with spatial retrieval. \method{} separates CSI into a \emph{content}
+code representing the activity and a \emph{domain} code representing environmental
+conditions. At inference time, the domain code retrieves relevant entries from a
+geometry-tagged memory, and the retrieved context is used to condition the classifier.
+A new environment can therefore be added through memory insertion without labelled
+target data or gradient-based retraining.
 
 \subsection*{Contributions}
 \begin{itemize}
-\item We formulate cross-domain CSI sensing as \emph{retrieval-conditioned
-perception}: the domain code is preserved as a retrieval key instead of being discarded,
-and a new environment is handled by memory insertion rather than retraining
+\item We formulate cross-domain CSI sensing as \emph{retrieval-conditioned perception},
+preserving domain information as a retrieval key instead of discarding it
 (Section~\ref{sec:method}).
-\item We give a self-supervised disentanglement objective for CSI with an explicit
-independence penalty and physics-informed augmentations, and we state precisely which
-invariance each term buys (Section~\ref{sec:method}).
-\item We specify a falsifiable evaluation protocol with claim-to-experiment mapping,
-strong DA/DG/few-shot baselines, and a memory-free ablation that isolates the retrieval
-contribution (Section~\ref{sec:protocol}), and we report \DECISION{statistical tests to be
-fixed: paired bootstrap / McNemar} rather than single-run accuracies.
+\item We introduce a self-supervised disentanglement objective that separates activity
+and domain factors using physics-informed augmentations and an independence penalty
+(Section~\ref{sec:method}).
+\item We define an evaluation protocol covering DA, DG, and few-shot baselines, together
+with a memory-free ablation to isolate the contribution of retrieval
+(Section~\ref{sec:protocol}).
 \end{itemize}
 
-\TODO{contribution 3 currently promises an evaluation that has not been executed; either
-run it or soften the claim before submission.}
-
 % =====================================================================
-\section{Related Work}
+
+\section{Literature Review}
 \label{sec:related}
 
 \subsection{Cross-domain Wi-Fi sensing: the problem and its taxonomy}
