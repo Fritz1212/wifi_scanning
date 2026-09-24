@@ -282,7 +282,6 @@ with a memory-free ablation to isolate the contribution of retrieval
 \section{Literature Review}
 \label{sec:related}
 
-\subsection{Cross-domain Wi-Fi sensing: the problem and its taxonomy}
 CSI is a sampled complex channel response; its magnitude and phase respond both to human
 motion and to the static geometry of the deployment. Chen et al.\ \cite{Chen2022Survey}
 formalise the domain shift this creates and group remedies into five families ---
@@ -302,7 +301,6 @@ generalisation claims measurable. We adopt that critique: our formulation keeps 
 domain as an explicit, retrievable variable rather than treating all shift as one
 undifferentiated nuisance.
 
-\subsection{Domain adaptation and generalisation}
 Adaptation-based methods assume some target access. Fidora \cite{Chen2022Fidora} combines a
 variational-autoencoder augmenter with a joint classification--reconstruction classifier
 and reports gains for new users (+17.8\% average F1) and for a changed environment
@@ -344,7 +342,6 @@ environment-independent speed-distribution profile with cross-modal visual super
 reporting 96.8\% over a year-long deployment. Our augmentations are in the same spirit as
 ARC-Fi's, and we are explicit that this is inherited rather than novel.
 
-\subsection{Few-shot and prototype-based matching}
 FewSense \cite{Yin2022FewSense} pretrains a feature extractor and fine-tunes it on a few
 target samples, reaching 93.9/96.5/82.7\% five-shot accuracy on SignFi/Widar/Wiar with
 collaborative multi-receiver fusion adding 29.2\%. CrossFi \cite{Zhao2024CrossFi} replaces
@@ -357,7 +354,6 @@ are the closest in spirit to retrieval --- matching a query against stored exemp
 but their memory holds \emph{class prototypes}, not \emph{spatial descriptions}, so they
 cannot exploit the fact that the room is known.
 
-\subsection{Self-supervised representation learning and foundation models}
 AutoFi \cite{Yang2022AutoFi} learns from randomly captured low-quality unlabelled CSI with
 a geometric self-supervised objective and transfers across tasks. WiFiAct
 \cite{Lyons2024WiFiAct} pairs an environment-robust preprocessing pipeline with a Bayesian
@@ -376,7 +372,6 @@ capacity, is the bottleneck --- and Gong et al.\ \cite{Gong2026WiSwiss} pre-trai
 multi-source datasets. \method{} inherits this encoder-scaling result: our contribution is
 what happens \emph{after} the encoder, and is complementary to pretraining scale.
 
-\subsection{Retrieval augmentation and explicit external memory}
 RAG conditions generation on retrieved non-parametric context \cite{lewis2020rag}, and
 spatial variants constrain retrieval with geometric relations \cite{spatial_rag}. In
 wireless, ENWAR \cite{Nazar2024Enwar} builds a RAG-empowered multimodal LLM framework for
