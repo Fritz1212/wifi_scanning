@@ -390,6 +390,40 @@ claim most likely to be scooped.}
 \section{Method}
 \label{sec:method}
 
+\begin{table}[t]
+\centering
+\caption{Notation used in Section~\ref{sec:method}.}
+\label{tab:notation}
+\small
+\begin{tabular}{p{0.22\columnwidth}p{0.65\columnwidth}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+$x$ & CSI input window. \\
+$N_s, N_t$ & Number of subcarriers and time samples in a CSI window. \\
+$y, C$ & Activity label and number of activity classes. \\
+$d$ & Domain descriptor available at inference time. \\
+$E_\theta$ & Encoder that maps a CSI window to content and domain codes. \\
+$D_\psi$ & Decoder used for CSI reconstruction. \\
+$g_\phi$ & Activity-classification head. \\
+$\zc, \zd$ & Content code and domain/environment code, respectively. \\
+$\mathcal{M}$ & Spatially indexed retrieval memory. \\
+$\rho_m, e_m$ & Geometric descriptor and conditioning embedding of memory entry $m$. \\
+$\phi_{\mathrm{geom}}(\cdot)$ & Function that extracts a geometric descriptor from CSI. \\
+$K, S$ & Number of retrieved entries and the resulting top-$K$ set. \\
+$s(\cdot,\cdot)$ & Similarity function used for memory retrieval. \\
+$w_m$ & Softmax retrieval weight assigned to memory entry $m$. \\
+$\tau$ & Softmax temperature for retrieval weighting. \\
+$\delta$ & Similarity threshold for the out-of-memory decision. \\
+$\mathcal{L}_{\mathrm{rec}}$ & Reconstruction loss. \\
+$\mathcal{L}_{\mathrm{cls}}$ & Activity-classification loss. \\
+$\mathcal{L}_{\mathrm{ind}}$ & Independence/disentanglement loss. \\
+$\mathcal{L}_{\mathrm{con}}$ & Content-consistency loss across augmented views. \\
+$\lambda_{1..3}$ & Weights of the classification, independence, and consistency losses. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Problem formulation}
 Let $x\in\mathbb{R}^{N_s\times N_t}$ denote a CSI window with $N_s$ subcarriers and $N_t$
 time samples, and $y\in\{1,\dots,C\}$ its activity label. We associate each measurement
