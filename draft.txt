@@ -1,0 +1,38 @@
+Beberapa referensi pada paper yang terdapat di dalam file `main.tex` masih belum terhubung dengan benar, sehingga beberapa sitasi muncul dalam bentuk tanda tanya (`?`) pada hasil kompilasi LaTeX.
+
+Permasalahan ini kemungkinan terjadi karena file `references.bib` belum memiliki seluruh referensi yang digunakan atau dipanggil di dalam `main.tex`. Dengan kata lain, jumlah dan isi referensi yang tersedia pada `references.bib` masih lebih sedikit dibandingkan dengan citation key atau sumber yang digunakan dalam paper.
+
+Tugasmu adalah bertindak sebagai researcher akademik dan melakukan pemeriksaan serta perbaikan terhadap sistem referensi tersebut.
+
+Lakukan hal-hal berikut:
+
+1. Periksa seluruh citation key yang digunakan di dalam `main.tex`.
+2. Bandingkan citation key tersebut dengan seluruh entry yang tersedia pada `references.bib`.
+3. Identifikasi citation key yang digunakan pada `main.tex` tetapi belum memiliki entry yang sesuai di dalam `references.bib`.
+4. Untuk setiap referensi yang hilang, cari paper atau sumber akademik asli yang memang dimaksud oleh konteks pembahasan pada `main.tex`.
+5. Verifikasi bahwa paper tersebut benar-benar ada dan memiliki informasi bibliografi yang valid, seperti:
+   - Judul paper
+   - Nama penulis
+   - Tahun publikasi
+   - Nama jurnal atau conference/proceedings
+   - Volume, issue, dan halaman apabila tersedia
+   - DOI atau publisher URL apabila tersedia
+6. Tambahkan referensi yang telah diverifikasi tersebut ke dalam `references.bib` menggunakan format BibTeX yang benar dan sesuai dengan citation key yang digunakan pada `main.tex`.
+7. Jangan mengubah citation key pada `main.tex` apabila referensi yang benar masih dapat ditemukan. Prioritaskan untuk melengkapi `references.bib` agar sesuai dengan citation key yang sudah digunakan.
+8. Jangan menambahkan atau menggunakan paper yang **hanya tersedia atau hanya dipublikasikan di arXiv**. Paper arXiv hanya boleh digunakan apabila paper tersebut juga telah diterbitkan secara resmi pada jurnal, conference, proceedings, atau publication venue akademik yang dapat diverifikasi.
+9. Jika sebuah paper memiliki versi arXiv dan versi resmi yang telah dipublikasikan, gunakan metadata dari versi publikasi resminya, bukan metadata arXiv.
+10. Jangan membuat, menebak, atau mengarang referensi, DOI, nama jurnal, tahun publikasi, atau informasi bibliografi lainnya.
+11. Jika sebuah citation pada `main.tex` tidak dapat ditemukan sumber akademik yang dapat diverifikasi, jangan membuat referensi palsu. Tandai citation tersebut dan jelaskan bahwa referensinya belum dapat diverifikasi.
+12. Sebisa mungkin pertahankan isi `main.tex` seperti saat ini dan fokuskan perubahan hanya pada perbaikan serta pelengkapan `references.bib`.
+
+Tujuan akhirnya adalah memastikan seluruh citation pada `main.tex` dapat terhubung dengan entry BibTeX yang valid di `references.bib`, sehingga tidak ada lagi citation yang menghasilkan tanda tanya (`?`) setelah proses kompilasi.
+
+Selain memperbaiki `references.bib`, berikan juga ringkasan hasil pemeriksaan yang berisi:
+
+- Citation key yang sebelumnya hilang.
+- Paper yang berhasil ditemukan untuk citation tersebut.
+- Publication venue dan tahun publikasinya.
+- DOI atau sumber resmi yang digunakan untuk melakukan verifikasi.
+- Citation yang masih tidak dapat diverifikasi, jika ada.
+
+Utamakan sumber resmi seperti website publisher, DOI/Crossref, ACM Digital Library, IEEE Xplore, Springer, ScienceDirect, Wiley, proceedings conference resmi, atau sumber akademik resmi lainnya.

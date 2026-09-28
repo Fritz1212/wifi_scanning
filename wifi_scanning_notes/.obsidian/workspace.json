@@ -34,9 +34,23 @@
               "icon": "lucide-file",
               "title": "Hermes Agent"
             }
+          },
+          {
+            "id": "c4203b5c0f6d3698",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "CSI.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "CSI"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       },
       {
         "id": "47c6b51e6631bd34",
@@ -130,7 +144,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Hermes Agent.md",
+                "file": "CSI.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -149,7 +163,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Hermes Agent.md",
+                "file": "CSI.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -192,7 +206,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Hermes Agent.md",
+                "file": "CSI.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -219,9 +233,10 @@
       "bases:Create new base": false
     }
   },
-  "active": "774c6ae29289872a",
+  "active": "c4203b5c0f6d3698",
   "lastOpenFiles": [
-    "Welcome.md",
-    "Hermes Agent.md"
+    "Hermes Agent.md",
+    "CSI.md",
+    "Welcome.md"
   ]
 }
