@@ -81,26 +81,9 @@
     at ([yshift=-4.94in]covercenter)
     {2702363765 / JESSICA NATHANIA WENARDI / Computer Science};
 
-  % BINUS emblem and lettering drawn as editable vector elements.
-  \begin{scope}[shift={([yshift=-5.72in]covercenter)},x=1cm,y=1.6cm]
-    \draw[gray!65,line width=1.1pt] (-3.05,-0.72) -- (3.05,-0.72);
-    \draw[red!85!black,line width=.55pt] (0,0.10) -- (0,-2.32);
-    \fill[red!85!black] (0,0.10) circle (1.5pt);
-    \fill[red!85!black] (0,-2.32) circle (1.5pt);
-    \fill[red!85!black] (-3.05,-0.72) circle (1.5pt);
-    \fill[red!85!black] (3.05,-0.72) circle (1.5pt);
-    \draw[gray!70,line width=3.0pt] (0.15,-.34) arc[start angle=65,end angle=305,x radius=.92,y radius=.70];
-    \fill[orange!90!yellow] (0,-.76) circle (.40cm);
-    \fill[white] (-.15,-.57) circle (.055cm);
-    \foreach \x/\y in {.55/-.20,.72/-.14,.81/-.27,.98/-.13,1.10/-.42,
-       .74/-.45,.90/-.55,1.12/-.62,.62/-.72,.81/-.81,1.23/-.30,
-       .99/-.77,1.34/-.11,1.52/-.50,1.38/-.76,1.68/-.19}
-       \fill[gray!60] (\x,\y) rectangle ++(.055,.055);
-    \node[anchor=west,font=\sffamily\bfseries\fontsize{24}{26}\selectfont,text=black!88]
-       at (.45,-1.65) {BINUS};
-    \node[anchor=west,font=\sffamily\bfseries\fontsize{19}{21}\selectfont,text=cyan!75!blue]
-       at (.47,-2.68) {UNIVERSITY};
-  \end{scope}
+  % BINUS emblem and lettering — included from logo_binus.png.
+  \node[anchor=north] at ([yshift=-5.72in]covercenter)
+    {\includegraphics[width=6.0cm]{logo_binus.png}};
 
   \node[anchor=north,font=\bfseries\fontsize{9}{12}\selectfont]
     at ([yshift=-8.44in]covercenter) {BINUS University};
