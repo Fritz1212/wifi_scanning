@@ -11,6 +11,7 @@
 \usepackage{url}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{float}
 
 % ---- method name ------------------------------------------------------
 \newcommand{\method}{\textsc{Relay}}
@@ -146,29 +147,6 @@ achowanda@binus.edu}
 \maketitle
 
 % =====================================================================
-\begin{abstract}
-We introduce \method{}, a cross-domain Wi-Fi channel state information (CSI) sensing
-framework that couples \emph{self-supervised disentanglement} of gesture content from
-environmental conditions with a \emph{spatial retrieval-augmented} memory that supplies
-the model with an explicit, updatable description of the space it currently occupies.
-Existing CSI sensing systems are trained and deployed in the same room: because the
-received signal is a function of both the human-induced dynamics and the static
-propagation environment, accuracy collapses when the layout, transmitter placement, or
-furniture configuration changes, and current remedies either require labelled target data,
-a retraining round, or multiple transceivers.
-Our key idea is to treat the environment not as nuisance to be erased but as
-\emph{retrievable context}: a self-supervised objective separates a content code from a
-domain code, and at inference a geometry-tagged memory indexed by coarse spatial
-descriptors conditions the classifier on the active layout, so a new room becomes a
-retrieval problem rather than a retraining problem.
-We evaluate under cross-environment, cross-location, and cross-orientation protocols
-against domain-adaptation and domain-generalisation baselines.
-\end{abstract}
-
-\begin{IEEEkeywords}
-Wi-Fi sensing, channel state information, cross-domain generalisation, self-supervised
-learning, disentangled representation, retrieval-augmented generation.
-\end{IEEEkeywords}
 
 % =====================================================================
 \section{Introduction}
@@ -296,7 +274,7 @@ the gap we target.
 \section{Method}
 \label{sec:method}
 
-\begin{table}[t]
+\begin{table}[h] % atau [t]/[!t]
 \centering
 \caption{Notation used in Section~\ref{sec:method}.}
 \label{tab:notation}
@@ -312,7 +290,7 @@ $d$ & Domain descriptor available at inference time. \\
 $E_\theta$ & Encoder that maps a CSI window to content and domain codes. \\
 $D_\psi$ & Decoder used for CSI reconstruction. \\
 $g_\phi$ & Activity-classification head. \\
-$\zc, \zd$ & Content code and domain/environment code, respectively. \\
+$\mathbf{z}^c, \mathbf{z}^d$ & Content code and domain/environment code, respectively. \\
 $\mathcal{M}$ & Spatially indexed retrieval memory. \\
 $\rho_m, e_m$ & Geometric descriptor and conditioning embedding of memory entry $m$. \\
 $\phi_{\mathrm{geom}}(\cdot)$ & Function that extracts a geometric descriptor from CSI. \\
@@ -321,6 +299,20 @@ $s(\cdot,\cdot)$ & Similarity function used for memory retrieval. \\
 $w_m$ & Softmax retrieval weight assigned to memory entry $m$. \\
 $\tau$ & Softmax temperature for retrieval weighting. \\
 $\delta$ & Similarity threshold for the out-of-memory decision. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% --- BAGIAN 2 (Ditaruh di posisi kode berikutnya agar muncul di halaman selanjutnya) ---
+\begin{table}[h]
+\centering
+% Tambahkan keterangan continued tanpa menaikkan counter tabel
+\caption{TABLE I (Continued): Notation used in Section~\ref{sec:method}.} 
+\small
+\begin{tabular}{p{0.22\columnwidth}p{0.65\columnwidth}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
 $\mathcal{L}_{\mathrm{rec}}$ & Reconstruction loss. \\
 $\mathcal{L}_{\mathrm{cls}}$ & Activity-classification loss. \\
 $\mathcal{L}_{\mathrm{ind}}$ & Independence/disentanglement loss. \\
@@ -387,7 +379,7 @@ $e_m$. Algorithm~\ref{alg:relay} states the procedure.
 w_m = \frac{\exp\!\big(s(\rho(x),\rho_m)/\tau\big)}{\sum_{k\in\mathrm{TopK}}\exp\!\big(s(\rho(x),\rho_k)/\tau\big)} .
 \end{equation}
 
-\begin{algorithm}[t]
+\begin{algorithm}[!ht]
 \caption{\method{} inference (adaptation = memory insertion, no retraining)}
 \label{alg:relay}
 \begin{algorithmic}[1]
@@ -416,53 +408,6 @@ Algorithm~\ref{alg:relay}, in the spirit of the conformal reliability of
 \cite{Li2026Conformal}.
 
 % =====================================================================
-\section{Discussion, Limitations, and Threats to Validity}
-\label{sec:discussion}
-
-\textbf{No empirical evidence yet.} This draft reports a method and a protocol. It
-contains no measured results, and no accuracy, F1, or error figure anywhere in the text
-should be read as one. The only numbers that appear are those quoted from prior work and
-attributed to it.
-
-\textbf{Novelty risk.} The retrieval-for-adaptation idea sits close to two literatures:
-prototype/few-shot matching \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS} and
-wireless RAG \cite{Nazar2024Enwar,Nazar2026Enwar2}. The distinguishing claim --- spatially
-indexed memory conditioning a sensing head, updated label-free --- must survive a fresh
-search and a carefully worded related-work section. If a concurrent paper makes the same
-move, the fallback contribution is the disentanglement-plus-retrieval interaction,
-which is testable independently.
-
-\textbf{Disentanglement assumptions.} Perfect separation of content and domain is not
-achievable in general; residual leakage is expected, and probing diagnostics are designed to
-measure it rather than assert it. If $\zd$ leaks gesture information, the retrieval
-conditioning becomes a soft shortcut that could inflate in-domain scores without
-transferring.
-
-\textbf{Retrieval realism.} The memory must be populated from captures that are cheap to
-obtain, otherwise the approach relocates the data-collection burden rather than removing
-it. The protocol must therefore report exactly what a new entry costs (duration of
-unattended capture, number of devices, whether the space must be empty), and compare that
-cost against the labelled data the baselines need.
-
-\textbf{Privacy.} CSI is frequently preferred over cameras because it does not image
-people \cite{Radwan2025Survey}. The geometric descriptors we store are a property of the
-space, not of a person, and the memory must be specified so that it cannot be inverted into
-person-identifying information. This is a design constraint, not an afterthought.
-
-% =====================================================================
-\section{Conclusion}
-\label{sec:conclusion}
-
-We propose \method{}, which treats the environment in cross-domain Wi-Fi CSI sensing as
-retrievable context rather than nuisance: a self-supervised objective factorises a CSI
-window into content and domain codes, and a spatially indexed memory conditions the
-classifier on the space in which the measurement was taken, so that a new room is handled
-by inserting an entry instead of retraining a model. We have stated the method, the
-falsifiable claim--experiment mapping, and the baseline set that would establish or refute
-it. The empirical work remains to be executed, and no result in this manuscript has been
-measured. The immediate next step is to run the source-domain training and the memory-free
-ablation on Widar3.0, because those two results decide whether the rest of the paper is
-worth writing.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
