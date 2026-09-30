@@ -226,7 +226,7 @@ Zhang2026BeyondLabels}.
 Existing solutions mainly use \emph{domain adaptation} (DA), \emph{domain
 generalisation} (DG), few-shot learning, or self-supervised learning. DA aligns source and
 target distributions but requires target-domain data
-\cite{Yang2021BookChapter,Chen2022Fidora,Mao2024WiCro,Prasad2024DANN}. DG and
+\cite{Chen2022Fidora,Prasad2024DANN}. DG and
 self-supervised approaches instead learn representations that transfer across domains
 \cite{Liu2024WiSR,Liu2024WiSGP,Wang2022AirFi,Xu2023ARCFi,Yang2022AutoFi,
 Barahimi2024CPC,Lyons2024WiFiAct}, while few-shot methods adapt using a small number of
@@ -278,56 +278,40 @@ Wang et al.\ \cite{Wang2025GeneralizabilitySurvey} review over 200 papers by pip
 stage, covering domain adaptation, meta-learning, metric learning, augmentation,
 cross-modal alignment, federated and continual learning, and release a dataset platform;
 they list pretraining at scale, multimodal foundation models, and continual deployment as
-the open directions. Radwan et al.\ \cite{Radwan2025Survey} survey specifically the
-self-supervised variants, contrasting contrastive and non-contrastive objectives, and
-publish a comparative accuracy analysis; Sai et al.\ \cite{Sai2026Review} give a broader
-review of machine-learning methods for CSI recognition. Zhang et al.\
-\cite{Zhang2026BeyondLabels} argue that the conventional factorisation of domains
-(room / user / orientation) is itself the limitation, and redefine domains to make
-generalisation claims measurable. We adopt that critique: our formulation keeps the
-domain as an explicit, retrievable variable rather than treating all shift as one
-undifferentiated nuisance.
+the open directions. Radwan et al.\ \cite{Radwan2025Survey} survey the self-supervised
+variants, contrasting contrastive and non-contrastive objectives with a comparative
+accuracy analysis. Zhang et al.\ \cite{Zhang2026BeyondLabels} argue that the conventional
+factorisation of domains (room / user / orientation) is itself the limitation, and
+redefine domains to make generalisation claims measurable. We adopt that critique: our
+formulation keeps the domain as an explicit, retrievable variable rather than treating all
+shift as one undifferentiated nuisance.
 
 Adaptation-based methods assume some target access. Fidora \cite{Chen2022Fidora} combines a
 variational-autoencoder augmenter with a joint classification--reconstruction classifier
 and reports gains for new users (+17.8\% average F1) and for a changed environment
-(beating the prior state of the art by 23.1\%). Yang et al.\ \cite{Yang2021IGLDA} raise
-localisation accuracy from 26.3\% to 82.2\% by recollecting 37.5\% of the data under an
-improved global/local metric method. CrossSense \cite{Zhang2018CrossSense} generates
-synthetic per-environment training samples with a roaming model plus a mixture of experts,
-lifting gait and gesture accuracy from 20\% to over 80--90\%. AdaWiFi
-\cite{Zheng2025AdaWiFi} lets multiple IoT devices sense collaboratively and reports
-roughly 30\% higher accuracy under one-shot adaptation. Prasad et al.\
-\cite{Prasad2024DANN} adversarially learn domain-invariant compressed RSS features with a
-gradient reversal layer, and Zhang et al.\ \cite{Zhang2025OnlineDFL} maintain an updatable
-radio map with a forgetting mechanism so that sequential data from other times and
-layouts can be absorbed without retraining. Wi-Cro \cite{Mao2024WiCro} translates source
-data into the target style with a GAN and applies metric learning; Avola et al.\
-\cite{Avola2025RaGAN} suppress domain-specific features with a relativistic-average GAN
-validated inside a constructed Faraday cage. Source-free adaptation removes the need for
-source data: Wi-SFDAGR \cite{Yan2025WiSFDAGR} treats adaptation as unsupervised clustering
-with an attraction--dispersion network and uncertainty-weighted neighbours.
-Li et al.\ \cite{Li2026Conformal} sidestep retraining with conformal prediction over
-multivariate kernel density estimates, reporting accuracy improvements from 30\% to 74\%
-across six kinds of domain variation, and He et al.\ \cite{He2025CrossSubject} transfer
-across subjects, while Mehryar \cite{Mehryar2023PassiveWiFi} places a few-shot adaptation
-stage above a cross-modal recognition layer for deployment-time robustness.
+(beating the prior state of the art by 23.1\%). AdaWiFi \cite{Zheng2025AdaWiFi} lets
+multiple IoT devices sense collaboratively and reports roughly 30\% higher accuracy under
+one-shot adaptation. Prasad et al.\ \cite{Prasad2024DANN} adversarially learn
+domain-invariant compressed features with a gradient reversal layer. Source-free
+adaptation removes the need for source data: Wi-SFDAGR \cite{Yan2025WiSFDAGR} treats
+adaptation as unsupervised clustering with an attraction--dispersion network and
+uncertainty-weighted neighbours, and Li et al.\ \cite{Li2026Conformal} sidestep retraining
+with conformal prediction over multivariate kernel density estimates, reporting accuracy
+improvements from 30\% to 74\% across six kinds of domain variation.
 \method{} differs in that it neither requires unlabelled target data at
 adaptation time nor retrains: it conditions on a retrieved description of the space.
 
 Generalisation-based methods need only source data. Widar3.0 \cite{Zheng2019Widar3}
 estimates body-coordinate velocity profiles as a physically domain-independent
 representation and reaches 82.6--92.4\% cross-domain with one-time training. WiSR
-\cite{Liu2024WiSR} randomises subcarrier-domain "styles" adversarially, and WiSGP
+\cite{Liu2024WiSR} randomises subcarrier-domain ``styles'' adversarially, and WiSGP
 \cite{Liu2024WiSGP} perturbs inputs along subdomain directions, both targeting
 multi-factor generalisation without target data. AirFi \cite{Wang2022AirFi} learns the
-critical CSI part for unseen environments; ARC-Fi \cite{Xu2023ARCFi} targets the more
-realistic semi-supervised setting where unlabelled CSI is plentiful but labels are scarce,
-and blocks "shortcut learning" with an antenna-response-consistency augmentation that
-treats co-located antennas as natural views. XFall \cite{Chi2024XFall} instead exploits an
-environment-independent speed-distribution profile with cross-modal visual supervision,
-reporting 96.8\% over a year-long deployment. Our augmentations are in the same spirit as
-ARC-Fi's, and we are explicit that this is inherited rather than novel.
+critical CSI part for unseen environments, while ARC-Fi \cite{Xu2023ARCFi} targets the
+more realistic semi-supervised setting where unlabelled CSI is plentiful but labels are
+scarce, and blocks ``shortcut learning'' with an antenna-response-consistency augmentation
+that treats co-located antennas as natural views. Our augmentations are in the same spirit
+as ARC-Fi's, and we are explicit that this is inherited rather than novel.
 
 FewSense \cite{Yin2022FewSense} pretrains a feature extractor and fine-tunes it on a few
 target samples, reaching 93.9/96.5/82.7\% five-shot accuracy on SignFi/Widar/Wiar with
@@ -335,29 +319,21 @@ collaborative multi-receiver fusion adding 29.2\%. CrossFi \cite{Zhao2024CrossFi
 cosine similarity with an attention-based similarity network and a class-template
 generator, reporting 91.72\% one-shot and 64.81\% zero-shot cross-domain. FewCS
 \cite{Yang2023FewCS} clusters intra-domain prototypes and extracts cross-domain prototypes
-in a shared space for edge--cloud online learning. WiGNN \cite{Chen2024WiGNN} models
-multi-receiver CSI as a graph and averages 94.0\% cross-domain on Widar3.0. These systems
-are the closest in spirit to retrieval --- matching a query against stored exemplars ---
-but their memory holds \emph{class prototypes}, not \emph{spatial descriptions}, so they
-cannot exploit the fact that the room is known.
+in a shared space for edge--cloud online learning. These systems are the closest in spirit
+to retrieval --- matching a query against stored exemplars --- but their memory holds
+\emph{class prototypes}, not \emph{spatial descriptions}, so they cannot exploit the fact
+that the room is known.
 
 AutoFi \cite{Yang2022AutoFi} learns from randomly captured low-quality unlabelled CSI with
 a geometric self-supervised objective and transfers across tasks. WiFiAct
 \cite{Lyons2024WiFiAct} pairs an environment-robust preprocessing pipeline with a Bayesian
-CNN and contrastive augmentation. Context-aware predictive coding \cite{Barahimi2024CPC},
-temporal--frequency masked autoencoding for localisation \cite{Liu2026SSLMAE},
-cross-modal-guided MAE \cite{Liu2025CIGMAE}, CSI-MAE \cite{Jiang2026CSIMAE}, a
-CIR--CSI-consistency MIMO channel foundation model \cite{Jiang2025MIMO}, JEPA-style
-objectives \cite{Kim2026WiFiJEPA,Luo2026CSIJEPA}, parameter-efficient adapters
-\cite{Custance2026Adapter}, source-free multi-user adaptation \cite{Radwan2026MUSHOTFi},
-and a Siamese CNN--Transformer channel-charting model robust to transmitter relocation
-\cite{Lee2026PCC} all build encoders without labels. The evaluation of Xu et al.\
-\cite{Xu2025EvalSSL} benchmarks these objectives for CSI activity recognition, while
-Jiang et al.\ \cite{Jiang2025Foundation} pretrain masked autoencoders on 1.3M samples from
-14 datasets and find log-linear gains with pretraining data --- concluding that data, not
-capacity, is the bottleneck --- and Gong et al.\ \cite{Gong2026WiSwiss} pre-train on
-multi-source datasets. \method{} inherits this encoder-scaling result: our contribution is
-what happens \emph{after} the encoder, and is complementary to pretraining scale.
+CNN and contrastive augmentation. Context-aware predictive coding \cite{Barahimi2024CPC}
+and several recent masked autoencoder, JEPA, and adapter-based objectives further
+demonstrate that strong CSI encoders can be built without labels. Jiang et al.\
+\cite{Jiang2025Foundation} pretrain masked autoencoders on 1.3M samples from 14 datasets
+and find log-linear gains with pretraining data --- concluding that data, not capacity, is
+the bottleneck. \method{} inherits this encoder-scaling result: our contribution is what
+happens \emph{after} the encoder, and is complementary to pretraining scale.
 
 RAG conditions generation on retrieved non-parametric context \cite{lewis2020rag}, and
 spatial variants constrain retrieval with geometric relations \cite{spatial_rag}. In
@@ -545,8 +521,8 @@ baseline; (ii) domain-invariant feature extraction \cite{Zheng2019Widar3}; (iii)
 randomisation / perturbation methods \cite{Liu2024WiSR,Liu2024WiSGP}; (iv) adaptation
 methods \cite{Chen2022Fidora,Prasad2024DANN,Yan2025WiSFDAGR,Zheng2025AdaWiFi};
 (v) few-shot prototype matching \cite{Yin2022FewSense,Zhao2024CrossFi,Yang2023FewCS};
-(vi) a self-supervised encoder without retrieval \cite{Yang2022AutoFi,Barahimi2024CPC};
-(vii) a reliability-oriented baseline \cite{Li2026Conformal}. Report each baseline's
+(vi) a self-supervised encoder without retrieval \cite{Yang2022AutoFi,Barahimi2024CPC,Lyons2024WiFiAct};
+(vii) a reliability-oriented baseline \cite{Li2026Conformal}.
 compute and tag requirements in the table --- a win against a method that needed 10$\times$
 the labels is not the same claim as a win under equal budget.
 
@@ -655,10 +631,6 @@ Every citation in this paper was resolved programmatically against Crossref, arX
 DBLP; no entry was written from memory. The audit table, including corrections made to the
 supplied reference list (year and venue mismatches, one abstract attributed to the wrong
 paper, and two entries that could not be verified at all) is in
-\texttt{references\_report.md}. \TODO{one supplied entry --- Puspitasari (2014), \emph{Analisis RSSI terhadap
-ketinggian perangkat Wi-Fi di lingkungan indoor} --- has no DOI and could not be
-verified through Crossref, arXiv, or DBLP. It is therefore \emph{not} in the
-bibliography and is marked \textbf{[CITATION NEEDED]} wherever it is used: locate its
-publisher record or drop the citation.}
+
 
 \end{document}
